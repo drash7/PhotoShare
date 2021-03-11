@@ -7,7 +7,13 @@ CREATE TABLE Users (
     user_id int4  AUTO_INCREMENT,
     email varchar(255) UNIQUE,
     password varchar(255),
-  CONSTRAINT users_pk PRIMARY KEY (user_id)
+    f_name 	CHAR(80),
+	l_name	CHAR(80),
+	d_birth		DATE,
+	hometown	CHAR(50),
+	gender		CHAR(20),
+	score INTEGER,
+	CONSTRAINT users_pk PRIMARY KEY (user_id)
 );
 
 CREATE TABLE Pictures
@@ -21,3 +27,4 @@ CREATE TABLE Pictures
 );
 INSERT INTO Users (email, password) VALUES ('test@bu.edu', 'test');
 INSERT INTO Users (email, password) VALUES ('test1@bu.edu', 'test');
+
