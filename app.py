@@ -140,6 +140,11 @@ def register_user():
 		print("couldn't find all tokens")
 		return flask.redirect(flask.url_for('register'))
 
+def getUserAlbums(uid):
+	cursor = conn.cursor()
+	cursor.execute("SELECT name, album_id FROM Album WHERE user_id = '{0}'".format(uid))
+	return cursor.fetchall()
+
 def getUsersPhotos(uid):
 	cursor = conn.cursor()
 	cursor.execute("SELECT imgdata, picture_id, caption FROM Pictures WHERE user_id = '{0}'".format(uid))
@@ -188,6 +193,20 @@ def upload_file():
 		return render_template('upload.html')
 #end photo uploading code
 
+@app.route('/createAlbum', methods=['GET', 'POST'])
+@flask_login.login_required
+def create_album():
+	if request.method == 'POST':
+		name = request.form.get('name')
+		user_id = getUserIdFromEmail(flask_login.current_user.id)
+		
+		cursor = conn.cursor()
+		cursor.execute('''INSERT INTO Albums (name, user_id) VALUES (%s, %s)''' ,(name, user_id))
+		conn.commit()
+		return render_template('createdAlbum.html', name=flask_login.current_user.id, message='Album created!')
+	#The method is GET so we return a  HTML form to upload the a photo.
+	else:
+		return render_template('createAlbum.html')
 
 #default page
 @app.route("/", methods=['GET'])
