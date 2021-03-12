@@ -232,7 +232,7 @@ def upload_file():
 def hello():
 	return render_template('hello.html', message='Welecome to Photoshare')
 
-@app.route('/createAlbum', methods=['GET', 'POST'])
+@app.route('/createTag', methods=['GET', 'POST'])
 @flask_login.login_required
 def create_tag():
 	if request.method == 'POST':
