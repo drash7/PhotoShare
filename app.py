@@ -206,10 +206,10 @@ def upload_file():
 		currentscore = getUserScore(flask_login.current_user.id)
 		flask_login.current_user.id = currentscore + 1
 		#get the album id for the entered album
-		cursor.execute('''SELECT albums_id FROM Albums WHERE name=%s AND user_id=%d''', (album, uid))
+		cursor.execute('''SELECT albums_id FROM Albums WHERE name=%s AND user_id=%s''', (album, uid))
 		albums_id = cursor.fetchone()
 		#insert the uploaded picture and its associated information into Pictures
-		cursor.execute('''INSERT INTO Pictures (imgdata, user_id, caption, albums_id) VALUES (%s, %s, %s, %d)''' ,(photo_data,uid, caption, albums_id))
+		cursor.execute('''INSERT INTO Pictures (imgdata, user_id, caption, albums_id) VALUES (%s, %s, %s, %s)''' ,(photo_data,uid, caption, albums_id))
 		conn.commit()
 		#get the photo id for the uploaded photo
 		cursor.execute('''SELECT photo_id FROM Pictures WHERE imgdata=%s AND user_id=%s''', (photo_data, uid))
@@ -219,7 +219,7 @@ def upload_file():
 			cursor.execute('''SELECT tag_id FROM Tags WHERE name=%s''', (tag))
 			req_tag_id = cursor.fetchone()
 			#insert the (tag, photo) tuple into Tagged
-			cursor.execute('''INSERT INTO Tagged (photo_id, tag_id) VALUES (%d, %d)''', (photo_id, req_tag_id))
+			cursor.execute('''INSERT INTO Tagged (photo_id, tag_id) VALUES (%s, %s)''', (photo_id, req_tag_id))
 		return render_template('hello.html', name=flask_login.current_user.id, message='Photo uploaded!', photos=getUsersPhotos(uid),base64=base64)
 	#The method is GET so we return a  HTML form to upload the a photo.
 	else:
@@ -268,9 +268,9 @@ def delete_album():
 		cursor = conn.cursor()
 		cursor.execute('''SELECT albums_id FROM Albums WHERE album_name = %s AND user_id = %s''', (name, uid))
 		req_id = cursor.fetchone()
-		cursor.execute('''DELETE * FROM Pictures WHERE albums_id = %d''', (req_id))
+		cursor.execute('''DELETE * FROM Pictures WHERE albums_id = %s''', (req_id))
 		cursor.commit()
-		cursor.execute('''DELETE FROM Albums WHERE albums_id = %d''', (req_id))
+		cursor.execute('''DELETE FROM Albums WHERE albums_id = %s''', (req_id))
 		cursor.commit()
 		return render_template('albumDeleted.html', name=flask_login.current_user.id, message='Album deleted!')
 	else:
