@@ -40,7 +40,7 @@ CREATE TABLE Tags(
  PRIMARY KEY (tag_id)
 );
 
-CREATE TABLE Photos(
+CREATE TABLE Pictures(
  photo_id INTEGER AUTO_INCREMENT,
  caption VARCHAR(100),
  imgdata LONGBLOB,
@@ -51,12 +51,14 @@ CREATE TABLE Photos(
  FOREIGN KEY (user_id) REFERENCES Users (user_id)
 );
 
+DROP TABLE IF EXISTS Albums CASCADE;
+
 CREATE TABLE Tagged(
  photo_id INTEGER,
  tag_id INTEGER,
  PRIMARY KEY (photo_id, tag_id),
  FOREIGN KEY(photo_id)
- REFERENCES Photos (photo_id),
+ REFERENCES Pictures (photo_id),
  FOREIGN KEY(tag_id)
  REFERENCES Tags (tag_id)
 );
@@ -71,7 +73,7 @@ CREATE TABLE Comments(
  FOREIGN KEY (user_id)
  REFERENCES Users (user_id),
  FOREIGN KEY (photo_id)
- REFERENCES Photos (photo_id)
+ REFERENCES Pictures (photo_id)
 );
 
 CREATE TABLE Likes(
@@ -79,49 +81,13 @@ CREATE TABLE Likes(
  user_id INTEGER,
  PRIMARY KEY (photo_id,user_id),
  FOREIGN KEY (photo_id)
- REFERENCES Photos (photo_id),
+ REFERENCES Pictures (photo_id),
  FOREIGN KEY (user_id)
  REFERENCES Users (user_id)
 );
 
-=======
-DROP TABLE IF EXISTS Pictures CASCADE;
 DROP TABLE IF EXISTS Users CASCADE;
-
-CREATE TABLE Users (
-    user_id int4  AUTO_INCREMENT,
-    email varchar(255) UNIQUE,
-    password varchar(255),
-    f_name 	CHAR(80),
-	l_name	CHAR(80),
-	d_birth		DATE,
-	hometown	CHAR(50),
-	gender		CHAR(20),
-	score INTEGER,
-  CONSTRAINT users_pk PRIMARY KEY (user_id)
-);
-
-CREATE TABLE Pictures
-(
-  picture_id int4  AUTO_INCREMENT,
-  user_id int4,
-  imgdata longblob ,
-  caption VARCHAR(255),
-  album_id int4,
-  INDEX upid_idx (user_id),
-  INDEX abid_idx (album_id),
-  CONSTRAINT pictures_pk PRIMARY KEY (picture_id)
-);
-
-CREATE TABLE Albums
-(
-	album_id int4 AUTO_INCREMENT,
-    user_id int4,
-    name VARCHAR(50),
-    INDEX upid_idx (user_id),
-    CONSTRAINT albums_pk PRIMARY KEY (album_id)
-);
+DROP TABLE IF EXISTS Pictures CASCADE;
 
 INSERT INTO Users (email, password) VALUES ('test@bu.edu', 'test');
 INSERT INTO Users (email, password) VALUES ('test1@bu.edu', 'test');
->>>>>>> Stashed changes
