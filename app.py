@@ -10,7 +10,7 @@
 ###################################################
 
 import flask
-from flask import Flask, Response, request, render_template, redirect, url_for
+from flask import Flask, Response, flash, request, render_template, redirect, url_for
 from flaskext.mysql import MySQL
 import flask_login
 
@@ -138,12 +138,8 @@ def register_user():
 		return render_template('hello.html', name=email, message='Account Created!')
 	else:
 		print("couldn't find all tokens")
+		flask.flash('Error: Email already exists. Please try logging in or Using another email to register:')
 		return flask.redirect(flask.url_for('register'))
-
-def getUserAlbums(uid):
-	cursor = conn.cursor()
-	cursor.execute("SELECT name, album_id FROM Album WHERE user_id = '{0}'".format(uid))
-	return cursor.fetchall()
 
 def getUsersPhotos(uid):
 	cursor = conn.cursor()
@@ -155,6 +151,11 @@ def getUserIdFromEmail(email):
 	cursor.execute("SELECT user_id  FROM Users WHERE email = '{0}'".format(email))
 	return cursor.fetchone()[0]
 
+def getUserScore(email):
+	cursor = conn.cursor()
+	cursor.execute("SELECT user_id FROM Users WHERE email = '{0}'".format(email))
+	return cursor.fetchone()[0]
+
 def isEmailUnique(email):
 	#use this to check if a email has already been registered
 	cursor = conn.cursor()
@@ -164,6 +165,15 @@ def isEmailUnique(email):
 	else:
 		return True
 #end login code
+
+def doesEmailExist(email):
+    	#use this to check if a email has already been registered
+	cursor = conn.cursor()
+	if cursor.execute("SELECT email  FROM Users WHERE email = '{0}'".format(email)):
+		#this means there are greater than zero entries with that email
+		return True
+	else:
+		return False
 
 @app.route('/profile')
 @flask_login.login_required
@@ -185,6 +195,8 @@ def upload_file():
 		caption = request.form.get('caption')
 		photo_data =imgfile.read()
 		cursor = conn.cursor()
+		currentscore = getUserScore(flask_login.current_user.id)
+		flask_login.current_user.id = currentscore + 1
 		cursor.execute('''INSERT INTO Pictures (imgdata, user_id, caption) VALUES (%s, %s, %s )''' ,(photo_data,uid, caption))
 		conn.commit()
 		return render_template('hello.html', name=flask_login.current_user.id, message='Photo uploaded!', photos=getUsersPhotos(uid),base64=base64)
@@ -193,20 +205,6 @@ def upload_file():
 		return render_template('upload.html')
 #end photo uploading code
 
-@app.route('/createAlbum', methods=['GET', 'POST'])
-@flask_login.login_required
-def create_album():
-	if request.method == 'POST':
-		name = request.form.get('name')
-		user_id = getUserIdFromEmail(flask_login.current_user.id)
-		
-		cursor = conn.cursor()
-		cursor.execute('''INSERT INTO Albums (name, user_id) VALUES (%s, %s)''' ,(name, user_id))
-		conn.commit()
-		return render_template('createdAlbum.html', name=flask_login.current_user.id, message='Album created!')
-	#The method is GET so we return a  HTML form to upload the a photo.
-	else:
-		return render_template('createAlbum.html')
 
 #default page
 @app.route("/", methods=['GET'])
@@ -219,6 +217,42 @@ def view_photos():
 	cursor.execute("SELECT imgdata, picture_id, caption FROM Pictures WHERE TRUE")
 	pics = cursor.fetchall()
 	return render_template('gallery.html', photos=pics, base64=base64)
+
+@app.route('/top_users', methods=['GET'])
+def top_users_display():
+	cursor = conn.cursor()
+	cursor.execute("SELECT score, user_id FROM Users ORDER BY score LIMIT 10")
+	topten = cursor.fetchall()
+	return render_template('topusers.html', rows=topten, base64=base64)
+
+@app.route('/add_friends', methods=['GET'])
+@flask_login.login_required
+def adding_friends():
+	return render_template('friends.html', supress='True')
+
+@app.route("/add_friends", methods=['POST'])
+@flask_login.login_required
+def search_friends():
+	try:
+		email=request.form.get('email')
+	except:
+		print("couldn't find all tokens") #this prints to shell, end users will not see this (all print statements go to shell)
+		return flask.redirect(flask.url_for('add_friends'))
+	cursor = conn.cursor()
+	test =  doesEmailExist(email)
+	if test:
+		return render_template('add_friend.html', name=email)
+	else:
+		print("Email doesn't exist")
+		return render_template('friends.html', message='No such email exists. Please try again')
+		
+@app.route('/friendslist', methods=['GET'])
+@flask_login.login_required
+def friends_display():
+	cursor = conn.cursor()
+	cursor.execute("SELECT user_id2 FROM Friends")
+	list = cursor.fetchall()
+	return render_template('friend_list.html', thelist=list, base64=base64)
 
 if __name__ == "__main__":
 	#this is invoked when in the shell  you run
