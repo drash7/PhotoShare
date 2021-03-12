@@ -1,4 +1,13 @@
 <!-- author ben lawson balawson@bu.edu -->
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class=flashes>
+    {% for message in messages %}
+      <h2 style="color:red;">{{ message }}</h2>
+    {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
 <head>
     <title>Create an account!</title>
 </head>
@@ -11,6 +20,16 @@
         </div>
         <div id="content">
             <form method="post" action="{{ url_for('register_user') }}">
+                <label for="first_name">Enter your first name:</label>
+                <input type="first_name" name="first_name" /><br />
+                <label for="last_name">Enter your last name:</label>
+                <input type="last_name" name="last_name" /><br />
+                <label for="gender">Enter your gender:</label>
+                <input type="gender" name="gender" /><br />
+                <label for="hometown">Enter your hometown:</label>
+                <input type="hometown" name="hometown" /><br />
+                <label for="birth_date">Enter your date of birth (mm/dd/yyyy):</label>
+                <input type="birth_date" name="birth_date" /><br />
                 <label for="email">Enter your email:</label>
                 <input type="email" name="email" /><br />
                 <label for="password">Enter password:</label>
@@ -19,4 +38,7 @@
             </form>
          </div>
     </body>
+<ul>
+<a href='/login'>Log in instead?</a></br>
 <a href='/'>Home</a>
+</ul>
