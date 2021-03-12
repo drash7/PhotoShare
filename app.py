@@ -193,12 +193,28 @@ def upload_file():
 		uid = getUserIdFromEmail(flask_login.current_user.id)
 		imgfile = request.files['photo']
 		caption = request.form.get('caption')
-		photo_data =imgfile.read()
+		tag_blob = request.form.get('tags')
+		tags = tag_blob.split(' ')
+		album = request.form.get('album')
+		photo_data = imgfile.read()
 		cursor = conn.cursor()
 		currentscore = getUserScore(flask_login.current_user.id)
 		flask_login.current_user.id = currentscore + 1
-		cursor.execute('''INSERT INTO Pictures (imgdata, user_id, caption) VALUES (%s, %s, %s )''' ,(photo_data,uid, caption))
+		#get the album id for the entered album
+		cursor.execute('''SELECT album_id FROM Albums WHERE name=%s AND user_id=%d''', (album, uid))
+		album_id = cursor.fetchone()
+		#insert the uploaded picture and its associated information into Pictures
+		cursor.execute('''INSERT INTO Pictures (imgdata, user_id, caption, albums_id) VALUES (%s, %s, %s, %d)''' ,(photo_data,uid, caption, album_id))
 		conn.commit()
+		#get the photo id for the uploaded photo
+		cursor.execute('''SELECT photo_id FROM Pictures WHERE imgdata=%s AND user_id=%s''', (photo_data, uid))
+		photo_id = cursor.fetchone()
+		for tag in tags:
+			#get the tag id for the entered tag
+			cursor.execute('''SELECT tag_id FROM Tags WHERE name=%s''', (tag))
+			req_tag_id = cursor.fetchone()
+			#insert the (tag, photo) tuple into Tagged
+			cursor.execute('''INSERT INTO Tagged (photo_id, tag_id) VALUES (%d, %d)''', (photo_id, req_tag_id))
 		return render_template('hello.html', name=flask_login.current_user.id, message='Photo uploaded!', photos=getUsersPhotos(uid),base64=base64)
 	#The method is GET so we return a  HTML form to upload the a photo.
 	else:
