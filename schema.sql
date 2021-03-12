@@ -1,9 +1,8 @@
 CREATE DATABASE IF NOT EXISTS photoshare;
 USE photoshare;
-<<<<<<< Updated upstream
 
 CREATE TABLE Users(
- user_id INTEGER AUTO_INCREMENT
+ user_id INTEGER AUTO_INCREMENT,
  first_name VARCHAR(100),
  last_name VARCHAR(100),
  email VARCHAR(100),
@@ -26,7 +25,7 @@ CREATE TABLE Users(
 );
 
 CREATE TABLE Albums(
- albums_id INTEGER,
+ albums_id INTEGER AUTO_INCREMENT,
  name VARCHAR(100),
  date DATE,
  user_id INTEGER NOT NULL,
@@ -36,20 +35,20 @@ CREATE TABLE Albums(
 );
 
 CREATE TABLE Tags(
- tag_id INTEGER,
+ tag_id INTEGER AUTO_INCREMENT,
  name VARCHAR(100),
  PRIMARY KEY (tag_id)
 );
 
 CREATE TABLE Photos(
- photo_id INTEGER,
+ photo_id INTEGER AUTO_INCREMENT,
  caption VARCHAR(100),
- data LONGBLOB,
+ imgdata LONGBLOB,
  albums_id INTEGER NOT NULL,
-user_id INTEGER NOT NULL,
+ user_id INTEGER NOT NULL,
  PRIMARY KEY (photo_id),
  FOREIGN KEY (albums_id) REFERENCES Albums (albums_id),
-FOREIGN KEY (user_id) REFERENCES Users (user_id)
+ FOREIGN KEY (user_id) REFERENCES Users (user_id)
 );
 
 CREATE TABLE Tagged(
@@ -63,7 +62,7 @@ CREATE TABLE Tagged(
 );
 
 CREATE TABLE Comments(
- comment_id INTEGER,
+ comment_id INTEGER AUTO_INCREMENT,
  user_id INTEGER NOT NULL,
  photo_id INTEGER NOT NULL,
  text VARCHAR (100),
@@ -84,6 +83,7 @@ CREATE TABLE Likes(
  FOREIGN KEY (user_id)
  REFERENCES Users (user_id)
 );
+
 =======
 DROP TABLE IF EXISTS Pictures CASCADE;
 DROP TABLE IF EXISTS Users CASCADE;
