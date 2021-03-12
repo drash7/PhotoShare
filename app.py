@@ -151,6 +151,11 @@ def getUserIdFromEmail(email):
 	cursor.execute("SELECT user_id  FROM Users WHERE email = '{0}'".format(email))
 	return cursor.fetchone()[0]
 
+def getUserAlbums(uid):
+	cursor = conn.cursor()
+	cursor.execute("SELECT name, albums_id FROM Album WHERE user_id = '{0}'".format(uid))
+	return cursor.fetchall()
+
 def getUserScore(email):
 	cursor = conn.cursor()
 	cursor.execute("SELECT user_id FROM Users WHERE email = '{0}'".format(email))
@@ -201,10 +206,10 @@ def upload_file():
 		currentscore = getUserScore(flask_login.current_user.id)
 		flask_login.current_user.id = currentscore + 1
 		#get the album id for the entered album
-		cursor.execute('''SELECT album_id FROM Albums WHERE name=%s AND user_id=%d''', (album, uid))
-		album_id = cursor.fetchone()
+		cursor.execute('''SELECT albums_id FROM Albums WHERE name=%s AND user_id=%d''', (album, uid))
+		albums_id = cursor.fetchone()
 		#insert the uploaded picture and its associated information into Pictures
-		cursor.execute('''INSERT INTO Pictures (imgdata, user_id, caption, albums_id) VALUES (%s, %s, %s, %d)''' ,(photo_data,uid, caption, album_id))
+		cursor.execute('''INSERT INTO Pictures (imgdata, user_id, caption, albums_id) VALUES (%s, %s, %s, %d)''' ,(photo_data,uid, caption, albums_id))
 		conn.commit()
 		#get the photo id for the uploaded photo
 		cursor.execute('''SELECT photo_id FROM Pictures WHERE imgdata=%s AND user_id=%s''', (photo_data, uid))
@@ -227,6 +232,33 @@ def upload_file():
 def hello():
 	return render_template('hello.html', message='Welecome to Photoshare')
 
+@app.route('/createAlbum', methods=['GET', 'POST'])
+@flask_login.login_required
+def create_tag():
+	if request.method == 'POST':
+		name = request.form.get('name')
+		cursor = conn.cursor()
+		cursor.execute('''INSERT INTO Tags (name) VALUES (%s)''' ,(name))
+		conn.commit()
+		return render_template('createdTag.html', name=flask_login.current_user.id, message='Tag created!')
+	#The method is GET so we return a  HTML form to upload the a photo.
+	else:
+		return render_template('createTag.html')
+
+@app.route('/createAlbum', methods=['GET', 'POST'])
+@flask_login.login_required
+def create_album():
+	if request.method == 'POST':
+		name = request.form.get('name')
+		user_id = getUserIdFromEmail(flask_login.current_user.id)
+		cursor = conn.cursor()
+		cursor.execute('''INSERT INTO Albums (name, user_id) VALUES (%s, %s)''' ,(name, user_id))
+		conn.commit()
+		return render_template('createdAlbum.html', name=flask_login.current_user.id, message='Album created!')
+	#The method is GET so we return a  HTML form to upload the a photo.
+	else:
+		return render_template('createAlbum.html')
+
 @app.route('/deleteAlbum', methods=['GET', 'POST'])
 @flask_login.login_required
 def delete_album():
@@ -234,11 +266,11 @@ def delete_album():
 		uid = getUserIdFromEmail(flask_login.current_user.id)
 		name = request.form.get('name')
 		cursor = conn.cursor()
-		cursor.execute('''SELECT album_id FROM Albums WHERE album_name = %s AND user_id = %s''', (name, uid))
+		cursor.execute('''SELECT albums_id FROM Albums WHERE album_name = %s AND user_id = %s''', (name, uid))
 		req_id = cursor.fetchone()
-		cursor.execute('''DELETE * FROM Pictures WHERE album_id = %d''', (req_id))
+		cursor.execute('''DELETE * FROM Pictures WHERE albums_id = %d''', (req_id))
 		cursor.commit()
-		cursor.execute('''DELETE FROM Albums WHERE album_id = %d''', (req_id))
+		cursor.execute('''DELETE FROM Albums WHERE albums_id = %d''', (req_id))
 		cursor.commit()
 		return render_template('albumDeleted.html', name=flask_login.current_user.id, message='Album deleted!')
 	else:
