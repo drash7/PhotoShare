@@ -211,6 +211,23 @@ def upload_file():
 def hello():
 	return render_template('hello.html', message='Welecome to Photoshare')
 
+@app.route('/deleteAlbum', methods=['GET', 'POST'])
+@flask_login.login_required
+def delete_album():
+	if request.method == 'POST':
+		uid = getUserIdFromEmail(flask_login.current_user.id)
+		name = request.form.get('name')
+		cursor = conn.cursor()
+		cursor.execute('''SELECT album_id FROM Albums WHERE album_name = %s AND user_id = %s''', (name, uid))
+		req_id = cursor.fetchone()
+		cursor.execute('''DELETE * FROM Pictures WHERE album_id = %d''', (req_id))
+		cursor.commit()
+		cursor.execute('''DELETE FROM Albums WHERE album_id = %d''', (req_id))
+		cursor.commit()
+		return render_template('albumDeleted.html', name=flask_login.current_user.id, message='Album deleted!')
+	else:
+		return render_template('deleteAlbum.html')
+
 @app.route('/view', methods=['GET'])
 def view_photos():
 	cursor = conn.cursor()
