@@ -309,21 +309,28 @@ def fetch_photos_with_tags(tag):
 	return photos
 
 @flask_login.login_required
-@app.route('/mytaggedphotos', methods=['GET'])
-def get_photos_with_tag():
-	tags = request.form.get('tags').split(' ')
-	photos = []
-	for tag in tags:
-		photos.append(fetch_my_photos_with_tags(tag))
-	return render_template('display.html', photos=photos, base64=base64)
-
-@app.route('/alltaggedphotos', methods=['GET'])
+@app.route('/mytaggedphotos', methods=['GET', 'POST'])
 def get_my_photos_with_tag():
-	tags = request.form.get('tags').split(' ')
-	photos = []
-	for tag in tags:
-		photos.append(fetch_photos_with_tags(tag))
-	return render_template('display.html', photos=photos, base64=base64)
+	if request.method == 'POST':
+		tags_data = request.form.get('tags')
+		tags = tags_data[0].split(' ')
+		photos = []
+		for tag in tags:
+			photos.append(fetch_my_photos_with_tags(tag))
+		return render_template('display.html', photos=photos, base64=base64)
+	else:
+		return render_template('mytaggedphotos.html')
+
+@app.route('/alltaggedphotos', methods=['GET', 'POST'])
+def get_photos_with_tag():
+	if request.method == 'POST':
+		tags = request.form.get('tags').split(' ')
+		photos = []
+		for tag in tags:
+			photos.append(fetch_photos_with_tags(tag))
+		return render_template('display.html', photos=photos, base64=base64)
+	else:
+		return render_template('alltaggedphotos.html')
 
 @app.route('/top_users', methods=['GET'])
 def top_users_display():
