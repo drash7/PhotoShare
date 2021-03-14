@@ -279,9 +279,51 @@ def delete_album():
 @app.route('/view', methods=['GET'])
 def view_photos():
 	cursor = conn.cursor()
-	cursor.execute("SELECT imgdata, picture_id, caption FROM Pictures WHERE TRUE")
+	cursor.execute("SELECT imgdata, photo_id, caption FROM Pictures WHERE TRUE")
 	pics = cursor.fetchall()
 	return render_template('gallery.html', photos=pics, base64=base64)
+
+def fetch_my_photos_with_tags(tag):
+	uid = getUserIdFromEmail(flask_login.current_user.id)
+	cursor = conn.cursor()
+	cursor.execute('''SELECT tag_id FROM Tags WHERE name = %s''', (tag))
+	tag_id = cursor.fetchone()
+	cursor.execute('''SELECT photo_id FROM Tagged WHERE tag_id = %s''', (tag_id))
+	photo_ids = cursor.fetchall()
+	photos = []
+	for id in photo_ids:
+		cursor.execute('''SELECT imgdata, photo_id, caption FROM Pictures WHERE photo_id  = %s AND user_id = %s''', (id, uid))
+		photos.append(cursor.fetchone())
+	return photos
+
+def fetch_photos_with_tags(tag):
+	cursor = conn.cursor()
+	cursor.execute('''SELECT tag_id FROM Tags WHERE name = %s''', (tag))
+	tag_id = cursor.fetchone()
+	cursor.execute('''SELECT photo_id FROM Tagged WHERE tag_id = %s''', (tag_id))
+	photo_ids = cursor.fetchall()
+	photos = []
+	for id in photo_ids:
+		cursor.execute('''SELECT imgdata, photo_id, caption FROM Pictures WHERE photo_id  = %s''', id)
+		photos.append(cursor.fetchone())
+	return photos
+
+@flask_login.login_required
+@app.route('/mytaggedphotos', methods=['GET'])
+def get_photos_with_tag():
+	tags = request.form.get('tags').split(' ')
+	photos = []
+	for tag in tags:
+		photos.append(fetch_my_photos_with_tags(tag))
+	return render_template('display.html', photos=photos, base64=base64)
+
+@app.route('/alltaggedphotos', methods=['GET'])
+def get_my_photos_with_tag():
+	tags = request.form.get('tags').split(' ')
+	photos = []
+	for tag in tags:
+		photos.append(fetch_photos_with_tags(tag))
+	return render_template('display.html', photos=photos, base64=base64)
 
 @app.route('/top_users', methods=['GET'])
 def top_users_display():
