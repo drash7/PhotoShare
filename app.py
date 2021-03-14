@@ -209,17 +209,17 @@ def upload_file():
 		cursor.execute('''SELECT albums_id FROM Albums WHERE name=%s AND user_id=%s''', (album, uid))
 		albums_id = cursor.fetchone()
 		#insert the uploaded picture and its associated information into Pictures
-		cursor.execute('''INSERT INTO Pictures (imgdata, user_id, caption, albums_id) VALUES (%s, %s, %s, %s)''' ,(photo_data,uid, caption, albums_id))
+		cursor.execute("INSERT INTO Pictures (imgdata, user_id, caption, albums_id) VALUES ('{0}', '{1}', '{2}', '{3}')".format(photo_data,uid, caption, albums_id))
 		conn.commit()
 		#get the photo id for the uploaded photo
-		cursor.execute('''SELECT photo_id FROM Pictures WHERE imgdata=%s AND user_id=%s''', (photo_data, uid))
+		cursor.execute("SELECT photo_id FROM Pictures WHERE imgdata='{0}' AND user_id='{1}'".format(photo_data, uid))
 		photo_id = cursor.fetchone()
 		for tag in tags:
 			#get the tag id for the entered tag
-			cursor.execute('''SELECT tag_id FROM Tags WHERE name=%s''', (tag))
+			cursor.execute("SELECT tag_id FROM Tags WHERE name='{0}'".format(tag))
 			req_tag_id = cursor.fetchone()
 			#insert the (tag, photo) tuple into Tagged
-			cursor.execute('''INSERT INTO Tagged (photo_id, tag_id) VALUES (%s, %s)''', (photo_id, req_tag_id))
+			cursor.execute("INSERT INTO Tagged (photo_id, tag_id) VALUES ('{0}', '{1}')".format(photo_id, req_tag_id))
 		return render_template('hello.html', name=flask_login.current_user.id, message='Photo uploaded!', photos=getUsersPhotos(uid),base64=base64)
 	#The method is GET so we return a  HTML form to upload the a photo.
 	else:
@@ -238,7 +238,7 @@ def create_tag():
 	if request.method == 'POST':
 		name = request.form.get('name')
 		cursor = conn.cursor()
-		cursor.execute('''INSERT INTO Tags (name) VALUES (%s)''' ,(name))
+		cursor.execute("INSERT INTO Tags (name) VALUES ('{0}')".format(name))
 		conn.commit()
 		return render_template('createdTag.html', name=flask_login.current_user.id, message='Tag created!')
 	#The method is GET so we return a  HTML form to upload the a photo.
@@ -252,7 +252,7 @@ def create_album():
 		name = request.form.get('name')
 		user_id = getUserIdFromEmail(flask_login.current_user.id)
 		cursor = conn.cursor()
-		cursor.execute('''INSERT INTO Albums (name, user_id) VALUES (%s, %s)''' ,(name, user_id))
+		cursor.execute("INSERT INTO Albums (name, user_id) VALUES ('{0}', '{1}')".format(name, user_id))
 		conn.commit()
 		return render_template('createdAlbum.html', name=flask_login.current_user.id, message='Album created!')
 	#The method is GET so we return a  HTML form to upload the a photo.
@@ -266,7 +266,7 @@ def delete_album():
 		uid = getUserIdFromEmail(flask_login.current_user.id)
 		name = request.form.get('name')
 		cursor = conn.cursor()
-		cursor.execute('''SELECT albums_id FROM Albums WHERE album_name = %s AND user_id = %s''', (name, uid))
+		cursor.execute("SELECT albums_id FROM Albums WHERE album_name = '{0}' AND user_id = '{1}'".format(name, uid))
 		req_id = cursor.fetchone()
 		cursor.execute('''DELETE * FROM Pictures WHERE albums_id = %s''', (req_id))
 		cursor.commit()
