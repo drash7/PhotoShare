@@ -36,14 +36,15 @@ CREATE TABLE Albums(
 
 CREATE TABLE Tags(
  tag_id INTEGER AUTO_INCREMENT,
+ num_used INTEGER,
  name VARCHAR(100),
  PRIMARY KEY (tag_id)
 );
 
-CREATE TABLE Pictures(
+CREATE TABLE Photos(
  photo_id INTEGER AUTO_INCREMENT,
  caption VARCHAR(100),
- imgdata LONGBLOB,
+ data LONGBLOB,
  albums_id INTEGER NOT NULL,
  user_id INTEGER NOT NULL,
  PRIMARY KEY (photo_id),
@@ -51,14 +52,12 @@ CREATE TABLE Pictures(
  FOREIGN KEY (user_id) REFERENCES Users (user_id)
 );
 
-DROP TABLE IF EXISTS Albums CASCADE;
-
 CREATE TABLE Tagged(
  photo_id INTEGER,
  tag_id INTEGER,
  PRIMARY KEY (photo_id, tag_id),
  FOREIGN KEY(photo_id)
- REFERENCES Pictures (photo_id),
+ REFERENCES Photos (photo_id),
  FOREIGN KEY(tag_id)
  REFERENCES Tags (tag_id)
 );
@@ -73,7 +72,7 @@ CREATE TABLE Comments(
  FOREIGN KEY (user_id)
  REFERENCES Users (user_id),
  FOREIGN KEY (photo_id)
- REFERENCES Pictures (photo_id)
+ REFERENCES Photos (photo_id)
 );
 
 CREATE TABLE Likes(
@@ -81,13 +80,7 @@ CREATE TABLE Likes(
  user_id INTEGER,
  PRIMARY KEY (photo_id,user_id),
  FOREIGN KEY (photo_id)
- REFERENCES Pictures (photo_id),
+ REFERENCES Photos (photo_id),
  FOREIGN KEY (user_id)
  REFERENCES Users (user_id)
 );
-
-DROP TABLE IF EXISTS Users CASCADE;
-DROP TABLE IF EXISTS Pictures CASCADE;
-
-INSERT INTO Users (email, password) VALUES ('test@bu.edu', 'test');
-INSERT INTO Users (email, password) VALUES ('test1@bu.edu', 'test');

@@ -1,21 +1,27 @@
 <!-- author ben lawson (balawson@bu.edu) -->
+
 <head>
     <title>Delete an album!</title>
 </head>
-    <body>
-        <div class="title">
-            <h1>Delete an album from Photoshare</h1>
-        </div>
-            <form method="post" enctype="text/plain" action="/deleteAlbums">
-                <label for="name">Enter the name of the album you want to delete:</label>
-                <input type="text" name="name" required='true' /><br />
-                <input type="submit" value="Confirm" />
-            </form>
-        <ul>
-            <li><a href='/upload'>Upload a photo</a> </li>
-            <li><a href='/createAlbum'>Create an album</a> </li>
-            <li><a href='/view'>View all photos</a> </li>
-            <li><a href='/logout'>Logout</a></li>
-            <li><a href='/'>Home</a></li>
-        </ul>
-    </body>
+
+<body>
+    <div class="title">
+        <h1>Delete an album from Photoshare</h1>
+    </div>
+    <form method="post" enctype="text/plain" action="/deleteAlbums">
+        <label for="name">Enter the name of the album you want to delete:</label>
+        <input type="text" name="name" required='true' /><br />
+        <input type="submit" value="Confirm" />
+    </form>
+    <ul>
+        <li><a href='/upload'>Upload a photo</a> </li>
+        <li><a href='/createAlbum'>Create an album</a> </li>
+        <li><a href='/createTag'>Create a tag</a></li>
+        <li><a href='/view'>View all photos</a> </li>
+        <li><a href='/mytaggedphotos'>View my photos with a specific tag(s)</a> </li>
+        <li><a href='/alltaggedphotos'>View all photos with a specific tag(s)</a> </li>
+        <li><a href='/mostpopulartags'>View the most popular tag(s) on PhotoShare</a></li>
+        <li><a href='/logout'>Logout</a></li>
+        <li><a href='/'>Home</a></li>
+    </ul>
+</body>

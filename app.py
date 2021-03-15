@@ -143,7 +143,7 @@ def register_user():
 
 def getUsersPhotos(uid):
 	cursor = conn.cursor()
-	cursor.execute("SELECT imgdata, picture_id, caption FROM Pictures WHERE user_id = '{0}'".format(uid))
+	cursor.execute("SELECT imgdata, picture_id, caption FROM Photos WHERE user_id = '{0}'".format(uid))
 	return cursor.fetchall() #NOTE list of tuples, [(imgdata, pid), ...]
 
 def getUserIdFromEmail(email):
@@ -208,11 +208,11 @@ def upload_file():
 		#get the album id for the entered album
 		cursor.execute('''SELECT albums_id FROM Albums WHERE name=%s AND user_id=%s''', (album, uid))
 		albums_id = cursor.fetchone()
-		#insert the uploaded picture and its associated information into Pictures
-		cursor.execute("INSERT INTO Pictures (imgdata, user_id, caption, albums_id) VALUES ('{0}', '{1}', '{2}', '{3}')".format(photo_data,uid, caption, albums_id))
+		#insert the uploaded picture and its associated information into Photos
+		cursor.execute("INSERT INTO Photos (imgdata, user_id, caption, albums_id) VALUES ('{0}', '{1}', '{2}', '{3}')".format(photo_data,uid, caption, albums_id))
 		conn.commit()
 		#get the photo id for the uploaded photo
-		cursor.execute("SELECT photo_id FROM Pictures WHERE imgdata='{0}' AND user_id='{1}'".format(photo_data, uid))
+		cursor.execute("SELECT photo_id FROM Photos WHERE imgdata='{0}' AND user_id='{1}'".format(photo_data, uid))
 		photo_id = cursor.fetchone()
 		for tag in tags:
 			#get the tag id for the entered tag
@@ -220,12 +220,14 @@ def upload_file():
 			req_tag_id = cursor.fetchone()
 			#insert the (tag, photo) tuple into Tagged
 			cursor.execute("INSERT INTO Tagged (photo_id, tag_id) VALUES ('{0}', '{1}')".format(photo_id, req_tag_id))
+			cursor.execute("SELECT num_used FROM Tags WHERE tag_id = '{0}'".format(req_tag_id))
+			num_used = cursor.fetchone() + 1
+			cursor.execute("UPDATE Tags SET num_used = '{0}' WHERE tag_id = '{1}'".format(num_used, req_tag_id))
 		return render_template('hello.html', name=flask_login.current_user.id, message='Photo uploaded!', photos=getUsersPhotos(uid),base64=base64)
 	#The method is GET so we return a  HTML form to upload the a photo.
 	else:
 		return render_template('upload.html')
 #end photo uploading code
-
 
 #default page
 @app.route("/", methods=['GET'])
@@ -238,12 +240,19 @@ def create_tag():
 	if request.method == 'POST':
 		name = request.form.get('name')
 		cursor = conn.cursor()
-		cursor.execute("INSERT INTO Tags (name) VALUES ('{0}')".format(name))
+		cursor.execute("INSERT INTO Tags (num_used, name) VALUES ('{0}', '{1}')".format(0, name))
 		conn.commit()
 		return render_template('createdTag.html', name=flask_login.current_user.id, message='Tag created!')
 	#The method is GET so we return a  HTML form to upload the a photo.
 	else:
 		return render_template('createTag.html')
+
+@app.route('/mostpopulartag', methods=['GET'])
+def get_popular_tag():
+	cursor = conn.cursor()
+	cursor.execute("SELECT * FROM Tags T1 WHERE T1.num_used >= ALL (SELECT T2.num_used FROM Tags T2)")
+	popular_tags = cursor.fetchall()
+	return render_template('toptags.html', rows=popular_tags)
 
 @app.route('/createAlbum', methods=['GET', 'POST'])
 @flask_login.login_required
@@ -268,7 +277,7 @@ def delete_album():
 		cursor = conn.cursor()
 		cursor.execute("SELECT albums_id FROM Albums WHERE album_name = '{0}' AND user_id = '{1}'".format(name, uid))
 		req_id = cursor.fetchone()
-		cursor.execute('''DELETE * FROM Pictures WHERE albums_id = %s''', (req_id))
+		cursor.execute('''DELETE * FROM Photos WHERE albums_id = %s''', (req_id))
 		cursor.commit()
 		cursor.execute('''DELETE FROM Albums WHERE albums_id = %s''', (req_id))
 		cursor.commit()
@@ -279,7 +288,7 @@ def delete_album():
 @app.route('/view', methods=['GET'])
 def view_photos():
 	cursor = conn.cursor()
-	cursor.execute("SELECT imgdata, photo_id, caption FROM Pictures WHERE TRUE")
+	cursor.execute("SELECT imgdata, photo_id, caption FROM Photos WHERE TRUE")
 	pics = cursor.fetchall()
 	return render_template('gallery.html', photos=pics, base64=base64)
 
@@ -292,7 +301,7 @@ def fetch_my_photos_with_tags(tag):
 	photo_ids = cursor.fetchall()
 	photos = []
 	for id in photo_ids:
-		cursor.execute('''SELECT imgdata, photo_id, caption FROM Pictures WHERE photo_id  = %s AND user_id = %s''', (id, uid))
+		cursor.execute('''SELECT imgdata, photo_id, caption FROM Photos WHERE photo_id  = %s AND user_id = %s''', (id, uid))
 		photos.append(cursor.fetchone())
 	return photos
 
@@ -304,7 +313,7 @@ def fetch_photos_with_tags(tag):
 	photo_ids = cursor.fetchall()
 	photos = []
 	for id in photo_ids:
-		cursor.execute('''SELECT imgdata, photo_id, caption FROM Pictures WHERE photo_id  = %s''', id)
+		cursor.execute('''SELECT imgdata, photo_id, caption FROM Photos WHERE photo_id  = %s''', id)
 		photos.append(cursor.fetchone())
 	return photos
 
