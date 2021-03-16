@@ -1,0 +1,17 @@
+
+<head>
+    <title>Find your photos with a specific tag!</title>
+</head>
+    <body>
+        <div class="title">
+            <h1>Enter the tag(s) you are looking for:</h1>
+        </div>
+            <form method="post" action="{{ url_for('get_my_photos_with_tag') }}">
+            <label for="taname">Enter the name of a Tag:</label>
+            <input type="taname" name="taname" /><br />
+            <input type="submit" value="Confirm" />
+            </form>
+            <ul>
+                <li><a href='/'>Home</a></li>
+              </ul>
+    </body>
