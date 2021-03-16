@@ -1,15 +1,15 @@
 <head>
-    <title>Create an album!</title>
+    <title>Create a Tag!</title>
 </head>
 
 <body>
     <div class="title">
-        <h1>Create an album on Photoshare</h1>
+        <h1>Create a Tag on Photoshare</h1>
     </div>
     <div id="content">
-        <form method="post" action="{{ url_for('create_album2') }}">
-            <label for="alname">Enter a name for your Album:</label>
-            <input type="alname" name="alname" /><br />
+        <form method="post" action="{{ url_for('create_tag2') }}">
+            <label for="tname">Enter a name for your Tag:</label>
+            <input type="tname" name="tname" /><br />
         <input type="submit" value="Submit" />
         </form>
     </div>

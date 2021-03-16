@@ -6,7 +6,7 @@
 # CodeHandBook at http://codehandbook.org/python-web-application-development-using-flask-and-mysql/
 # and MaxCountryMan at https://github.com/maxcountryman/flask-login/
 # and Flask Offical Tutorial at  http://flask.pocoo.org/docs/0.10/patterns/fileuploads/
-# see links for further understanding
+# see links for further understandingg
 ###################################################
 
 import flask
@@ -23,7 +23,7 @@ app.secret_key = 'super secret string'  # Change this!
 
 #These will need to be changed according to your creditionals
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'KrispyKreme99'
+app.config['MYSQL_DATABASE_PASSWORD'] = 'Sidonlysid1@'
 app.config['MYSQL_DATABASE_DB'] = 'photoshare'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 mysql.init_app(app)
@@ -168,6 +168,11 @@ def getUserScore(email):
 	cursor.execute("UPDATE Users SET score = score + 1 WHERE email = '{0}'".format(email))
 	return 0
 
+def getUserScore2(email):
+	cursor = conn.cursor()
+	cursor.execute("UPDATE Users SET score = score - 1 WHERE email = '{0}'".format(email))
+	return 0
+
 def isEmailUnique(email):
 	#use this to check if a email has already been registered
 	cursor = conn.cursor()
@@ -196,6 +201,12 @@ def isAFriend(a,b):
 			return True
 	return False
 
+def lttot(a):
+	b = []
+	for i in a:
+		b.append(a)
+	return b
+
 @app.route('/profile')
 @flask_login.login_required
 def protected():
@@ -214,12 +225,28 @@ def upload_file():
 		uid = getUserIdFromEmail(flask_login.current_user.id)
 		imgfile = request.files['photo']
 		caption = request.form.get('caption')
+		tag_blob = request.form.get('tags')
+		tags = tag_blob.split(' ')
+		album = request.form.get('album')
 		photo_data =imgfile.read()
 		cursor = conn.cursor()
+		#get the album id for the entered album
+		cursor.execute('''SELECT albums_id FROM Albums WHERE name = (%s) AND user_id = (%s)''', (album, uid))
+		a_id = cursor.fetchone()
 		if uid != None:
 			score = getUserScore(flask_login.current_user.id)
-		cursor.execute('''INSERT INTO Photos(imgdata, user_id, caption) VALUES (%s, %s, %s )''' ,(photo_data,uid, caption))
+		cursor.execute('''INSERT INTO Photos(imgdata, user_id, caption, albums_id) VALUES (%s, %s, %s , %s )''' ,(photo_data,uid, caption, a_id))
 		conn.commit()
+		#get the photo id for the uploaded photo
+		cursor.execute('''SELECT photo_id FROM Photos WHERE imgdata= (%s) AND user_id= (%s)''', (photo_data, uid))
+		photo_id = cursor.fetchone()
+		for tag in tags:
+			#get the tag id for the entered tag
+			cursor.execute('''SELECT tag_id FROM Tags WHERE name= (%s)''',(tag.lower()))
+			req_tag_id = cursor.fetchone()
+			#insert the (tag, photo) tuple into Tagged
+			cursor.execute('''INSERT INTO Tagged (photo_id, tag_id) VALUES (%s, %s)''',(photo_id, req_tag_id))
+			cursor.execute('''UPDATE Tags SET num_used = num_used+1 WHERE tag_id = (%s)''',(req_tag_id))
 		return render_template('hello.html', name=flask_login.current_user.id, message='Photo uploaded!', photos=getUsersPhotos(uid),base64=base64)
 	#The method is GET so we return a  HTML form to upload the a photo.
 	else:
@@ -365,20 +392,154 @@ def friends_display():
 	list = cursor.fetchall()
 	return render_template('friend_list.html', thelist=list, base64=base64)
 
-@app.route('/createAlbum', methods=['GET', 'POST'])
+@app.route('/createTag', methods=['GET'])
+@flask_login.login_required
+def create_tag():
+	return render_template('createTag.html')
+
+@app.route('/createTag', methods=['POST'])
+@flask_login.login_required
+def create_tag2():
+	tname = request.form.get('tname')
+	cursor = conn.cursor()
+	cursor.execute("INSERT INTO Tags (num_used, name) VALUES ('{0}', '{1}')".format(0, tname.lower()))
+	conn.commit()
+	return render_template('createdTag.html', name=flask_login.current_user.id, message='Tag created!')
+
+
+@app.route('/createAlbum', methods=['GET'])
 @flask_login.login_required
 def create_album():
-	if request.method == 'POST':
-		name = request.form.get('name')
-		user_id = getUserIdFromEmail(flask_login.current_user.id)
-		cursor = conn.cursor()
-		cursor.execute("INSERT INTO Albums (name, user_id) VALUES ('{0}', '{1}')".format(name, user_id))
-		conn.commit()
-		return render_template('createdAlbum.html', name=flask_login.current_user.id, message='Album created!')
+	return render_template('createAlbum.html', name=flask_login.current_user.id)
 	#The method is GET so we return a  HTML form to upload the a photo.
+
+@app.route('/createAlbum', methods=['POST'])
+@flask_login.login_required
+def create_album2():
+	aname = request.form.get('alname')
+	user_id = getUserIdFromEmail(flask_login.current_user.id)
+	cursor = conn.cursor()
+	cursor.execute("INSERT INTO Albums (name, user_id) VALUES ('{0}', '{1}')".format(aname, user_id))
+	conn.commit()
+	return render_template('createdAlbum.html', name=flask_login.current_user.id, message='Album created!')
+
+@app.route('/deleteAlbum', methods=['GET', 'POST'])
+@flask_login.login_required
+def delete_album():
+	if request.method == 'POST':
+		uid = getUserIdFromEmail(flask_login.current_user.id)
+		namea = request.form.get('aname')
+		cursor = conn.cursor()
+		cursor.execute("SELECT albums_id FROM Albums WHERE name = {0} AND user_id = {1}".format(namea, uid))
+		req_id = cursor.fetchone()
+		cursor.execute("SELECT COUNT(photo_id) FROM PHOTOS WHERE albums_id = {0}".format(req_id[0]))
+		counter = cursor.fetchone()
+		aa = counter[0] 
+		for i in range(aa):
+			score = getUserScore2(flask_login.current_user.id)
+		cursor.execute("SELECT photo_id FROM PHOTOS WHERE albums_id = {0}".format(req_id[0]))
+		req_id2 = cursor.fetchall()
+		for i in req_id2:
+			cursor.execute("DELETE FROM Tagged WHERE photo_id = {0}".format(i[0]))
+			conn.commit()
+			cursor.execute("DELETE FROM Likes WHERE photo_id = {0}".format(i[0]))
+			conn.commit()
+			cursor.execute("DELETE FROM Comments WHERE photo_id = {0}".format(i[0]))
+			conn.commit()
+		cursor.execute("DELETE FROM Photos WHERE albums_id = {0}".format(req_id[0]))
+		conn.commit()
+		cursor.execute("DELETE FROM Albums WHERE albums_id = {0}".format(req_id[0]))
+		conn.commit()
+		return render_template('albumDeleted.html', name=flask_login.current_user.id, message='Album deleted!')
 	else:
-		return render_template('createAlbum.html')
+		return render_template('deleteAlbum.html')
+
+@app.route('/deletePhoto', methods=['GET', 'POST'])
+@flask_login.login_required
+def deletePhoto():
+	if request.method == 'POST':
+		score = getUserScore2(flask_login.current_user.id)
+		caption = request.form.get('cname')
+		nameA = request.form.get('aname')
+		#get album id
+		cursor = conn.cursor()
+		cursor.execute("SELECT albums_id FROM Albums WHERE name = {0}".format(nameA))
+		a_id = cursor.fetchone()
+		#get photo that has the given caption and the given album id
+		cursor.execute("SELECT photo_id FROM PHOTOS WHERE albums_id = {0}".format(a_id[0]))
+		req_id2 = cursor.fetchall()
+		for i in req_id2:
+			cursor.execute("DELETE FROM Tagged WHERE photo_id = {0}".format(i[0]))
+			conn.commit()
+			cursor.execute("DELETE FROM Likes WHERE photo_id = {0}".format(i[0]))
+			conn.commit()
+			cursor.execute("DELETE FROM Comments WHERE photo_id = {0}".format(i[0]))
+			conn.commit()
+		cursor.execute("DELETE FROM Photos WHERE caption = {0} AND albums_id = {1}".format(caption, a_id[0]))
+		conn.commit()
+		#remove photo
 		
+		return render_template('photoDeleted.html', name=flask_login.current_user.id, message='Photo deleted!')
+	else:
+		return render_template('deletePhoto.html')
+		
+def fetch_my_photos_with_tags(tag):
+	uid = getUserIdFromEmail(flask_login.current_user.id)
+	cursor = conn.cursor()
+	cursor.execute('''SELECT tag_id FROM Tags WHERE name = %s''', (tag))
+	tag_id = cursor.fetchone()
+	cursor.execute('''SELECT photo_id FROM Tagged WHERE tag_id = %s''', (tag_id))
+	photo_ids = cursor.fetchall()
+	photos = []
+	for id in photo_ids:
+		cursor.execute('''SELECT imgdata, photo_id, caption FROM Photos WHERE photo_id  = %s AND user_id = %s ''', (id, uid))
+		photos.append(cursor.fetchone())
+	return photos
+
+def fetch_photos_with_tags(tag):
+	cursor = conn.cursor()
+	cursor.execute('''SELECT tag_id FROM Tags WHERE name = %s''', (tag))
+	tag_id = cursor.fetchone()
+	cursor.execute('''SELECT photo_id FROM Tagged WHERE tag_id = %s''', (tag_id))
+	photo_ids = cursor.fetchall()
+	photos = []
+	for id in photo_ids:
+		cursor.execute('''SELECT imgdata, photo_id, caption FROM Photos WHERE photo_id  = %s''', (id))
+		photos.append(cursor.fetchone())
+	return photos
+
+@flask_login.login_required
+@app.route('/mytaggedphotos', methods=['GET', 'POST'])
+def get_my_photos_with_tag():
+	if request.method == 'POST':
+		tags = request.form.get('taname').split(' ')
+		photos = []
+		for tag in tags:
+			photos.append(fetch_my_photos_with_tags(tag.lower()))
+		return render_template('display.html', photos=photos, base64=base64)
+	else:
+		return render_template('mytaggedphotos.html')
+
+
+
+@app.route('/alltaggedphotos', methods=['GET', 'POST'])
+def get_photos_with_tag():
+	if request.method == 'POST':
+		tags = request.form.get('tname').split(' ')
+		photos = []
+		for tag in tags:
+			photos.append(fetch_photos_with_tags(tag.lower()))
+		return render_template('display.html', photos=photos, base64=base64)
+	else:
+		return render_template('alltaggedphotos.html')
+
+@app.route('/mostpopulartags', methods=['GET'])
+def get_popular_tag():
+	cursor = conn.cursor()
+	cursor.execute("SELECT * FROM Tags T1 WHERE T1.num_used >= ALL (SELECT T2.num_used FROM Tags T2)")
+	popular_tags = cursor.fetchall()
+	return render_template('toptags.html', rows=popular_tags)
+
 @app.route('/comsearch', methods=['GET'])
 @flask_login.login_required
 def com_tem():
@@ -403,7 +564,25 @@ def com_tem2():
 		us.append(ls)
 	return render_template('listquery.html', users2=us)
 
+@app.route('/friendrec', methods=['GET'])
+@flask_login.login_required
+def rec_friends():
+	user_id = getUserIdFromEmail(flask_login.current_user.id)	
+	cursor = conn.cursor()
+	cursor.execute("(SELECT F.user_id2, COUNT(F.user_id2) FROM Friends F WHERE F.user_id1 IN (SELECT F2.user_id2 FROM Friends F2 WHERE F2.user_id1 = {0}) AND F.user_id2 <> {0} GROUP BY F.user_id2 HAVING COUNT(F.user_id2)>1 ORDER BY COUNT(F.user_id2))".format(user_id))
+	fflist = cursor.fetchall()
+	flist = []
+	for i in range(len(fflist)-1,-1,-1):
+		cursor.execute("SELECT email FROM Users WHERE user_id = {0}".format(fflist[i][0]))
+		alist = cursor.fetchall()
+		aa = (alist[0])
+		flist.append(aa)
+
+		
+	return render_template('recfriends.html', ll = flist)
+	
 if __name__ == "__main__":
-	#this is invoked when in the shell  you run
+	#this is invoked when in the shell  you run 
 	#$ python app.py
+	
 	app.run(port=5000, debug=True)
