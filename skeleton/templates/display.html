@@ -1,0 +1,29 @@
+{% if message%}
+    {{message}}
+{% endif %}
+<!doctype html>
+<h1>Your search results:</h1>
+{% if aa %}
+    {% for aaa in aa %}
+        {{aaa}}
+    {% endfor %}
+{% endif %}
+{% if photos %}
+<h2>Enjoy these photos:</h2>
+<ul>
+    {% for photo_set in photos %}
+    {% for photo in photo_set %}
+        <li>{{photo[2]}}<br>
+        
+            <img src='data:image/jpg;base64, {{ base64.b64encode(photo[0]).decode("ascii") }}' />
+        </li>
+    {% endfor %}
+{% endfor %}
+</ul>
+{% endif %}
+
+
+
+<ul>
+    <li><a href='/'>Home</a></li>
+  </ul>
