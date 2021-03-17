@@ -1,0 +1,22 @@
+<!doctype html>
+<h1>Hello User!</h1>
+
+{% if rows %}
+<h2>Here are our TOP 10 Users:</h2>
+
+<ul>
+    {% for row in rows %}
+
+        <li>User: {{row[1]}}, Score = {{row[0]}}<br>
+            <row/>
+        </li>
+ 
+    {% endfor %}
+</ul>
+{% endif %}
+
+<ul>
+    <li><a href='/upload'>Upload a photo</a> </li>
+    <li><a href='/logout'>Logout</a></li>
+    <li><a href='/'>Home</a></li>
+</ul>

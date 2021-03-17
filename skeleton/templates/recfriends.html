@@ -1,0 +1,25 @@
+<!doctype html>
+{% if message %}
+<h4>{{message}}!</h4>
+{% endif %}
+
+<h1 style="color:rgb(38, 0, 255);">We've Got Friend Recommendations for you!</h1>
+<h2 style="color:rgb(51, 125, 236);">(Based on “friend-of- friends” Approach)</h2>
+<h3 style="color:rgb(51, 125, 236);">Most common friend comes first, Least common friend comes last</h3>
+
+
+{% if ll %}
+<ul>
+    {% for a1 in ll %}
+        <li>{{a1}}
+        </li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+
+
+
+<a href='/finaladd'>Add one of these users here!</a> <br>
+<a href='/'>Back to Home</a>
+
