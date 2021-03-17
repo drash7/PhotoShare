@@ -520,8 +520,6 @@ def get_my_photos_with_tag():
 	else:
 		return render_template('mytaggedphotos.html')
 
-
-
 @app.route('/alltaggedphotos', methods=['GET', 'POST'])
 def get_photos_with_tag():
 	if request.method == 'POST':
@@ -581,6 +579,34 @@ def rec_friends():
 		
 	return render_template('recfriends.html', ll = flist)
 	
+@app.route('/photorec', methods=['GET'])
+@flask_login.login_required
+def rec_photos():
+	user_id = getUserIdFromEmail(flask_login.current_user.id)
+	cursor = conn.cursor()
+	cursor.execute("SELECT photo_id FROM Photos WHERE user_id = '{0}'".format(user_id))
+	photo_ids = cursor.fetchall()
+	tags = []
+	for id in photo_ids:
+		cursor.execute("SELECT tag_id FROM Tagged WHERE photo_id = '{0}'".format(id))
+		tags.append(cursor.fetchone())
+	tags.sort()
+	tags_count = {}
+	for tag in tags:
+	    tags_count[tag] = 0
+	for i in range(len(tags)):
+ 	   tags_count[tags[i]] += 1
+	ordered_tags = {key: val for key, val in sorted(tags_count.items(), key = lambda ele: ele[1], reverse = True)}
+	if len(ordered_tags) < 5:
+		pass
+	else:
+		ordered_tags = ordered_tags[0:5]
+	photos = []
+	top_tags = list(ordered_tags.keys())
+	for tag in top_tags:
+		photos.append(fetch_photos_with_tags(tag.lower()))
+	return render_template('display.html', photos=photos, base64=base64)
+
 if __name__ == "__main__":
 	#this is invoked when in the shell  you run 
 	#$ python app.py
